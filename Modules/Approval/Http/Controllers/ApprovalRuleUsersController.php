@@ -35,14 +35,14 @@ class ApprovalRuleUsersController extends Controller
         abort_if(Gate::denies('access_approval_rule_users'), 403);
 
         $request->validate([
-            'approval_rule_id' => 'required|exists:approval_rules,id',
+            'approval_rules_id' => 'required|exists:approval_rules,id',
             'user_id'          => 'required|exists:users,id',
             'role'             => 'required|string|max:100',
             // hapus kalau kolom ini ga ada
             'is_active'        => 'nullable|boolean',
         ]);
 
-        ApprovalRuleUser::create($request->only(['approval_rule_id', 'user_id', 'role', 'is_active']));
+        ApprovalRuleUser::create($request->only(['approval_rules_id', 'user_id', 'role', 'is_active']));
 
         session()->flash('success', 'Approval Rule User Created!');
 
@@ -66,13 +66,13 @@ class ApprovalRuleUsersController extends Controller
         abort_if(Gate::denies('access_approval_rule_users'), 403);
 
         $request->validate([
-            'approval_rule_id' => 'required|exists:approval_rules,id',
+            'approval_rules_id' => 'required|exists:approval_rules,id',
             'user_id'          => 'required|exists:users,id',
             'role'             => 'required|string|max:100',
             'is_active'        => 'nullable|boolean',
         ]);
 
-        ApprovalRuleUser::findOrFail($id)->update($request->only(['approval_rule_id', 'user_id', 'role', 'is_active']));
+        ApprovalRuleUser::findOrFail($id)->update($request->only(['approval_rules_id', 'user_id', 'role', 'is_active']));
 
         session()->flash('info', 'Approval Rule User Updated!');
 

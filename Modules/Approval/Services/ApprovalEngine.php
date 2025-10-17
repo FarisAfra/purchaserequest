@@ -37,12 +37,12 @@ class ApprovalEngine
             ]);
 
             // buat log untuk level pertama
-            $level = ApprovalRuleLevel::where('approval_rule_id', $rule->id)
+            $level = ApprovalRuleLevel::where('approval_rules_id', $rule->id)
                 ->orderBy('level')
                 ->first();
 
             if ($level) {
-                $approvers = ApprovalRuleUser::where('approval_rule_level_id', $level->id)->get();
+                $approvers = ApprovalRuleUser::where('approval_rule_levels_id', $level->id)->get();
 
                 foreach ($approvers as $approver) {
                     $approvalRequest->logs()->create([
@@ -94,7 +94,7 @@ class ApprovalEngine
             if ($pending == 0) {
                 $nextLevel = $approvalRequest->current_level + 1;
 
-                $nextLevelData = \Modules\Approval\Entities\ApprovalRuleLevel::where('approval_rule_id', $approvalRequest->type->rules->id)
+                $nextLevelData = \Modules\Approval\Entities\ApprovalRuleLevel::where('approval_rules_id', $approvalRequest->type->rules->id)
                     ->where('level', $nextLevel)
                     ->first();
 

@@ -57,25 +57,29 @@ class ApprovalRulesController extends Controller
                         'is_active' => 1,
                     ]);
 
-                    if (!empty($lvl['requesters'])) {
-                        foreach ($lvl['requesters'] as $uid) {
-                            ApprovalRuleUser::create([
-                                'approval_rule_level_id' => $level->id,
-                                'user_id' => $uid,
-                                'role' => 'requester',
-                            ]);
+                    if (!empty($lvl['pairs']) && is_array($lvl['pairs'])) {
+                        foreach ($lvl['pairs'] as $pair) {
+                            if (!empty($pair['requester'])) {
+                                foreach ($pair['requester'] as $uid) {
+                                    ApprovalRuleUser::create([
+                                        'approval_rule_levels_id' => $level->id,
+                                        'user_id' => $uid,
+                                        'role' => 'requester',
+                                    ]);
+                                }
+                            }
+                    
+                            if (!empty($pair['approver'])) {
+                                foreach ($pair['approver'] as $uid) {
+                                    ApprovalRuleUser::create([
+                                        'approval_rule_levels_id' => $level->id,
+                                        'user_id' => $uid,
+                                        'role' => 'approver',
+                                    ]);
+                                }
+                            }
                         }
-                    }
-
-                    if (!empty($lvl['approvers'])) {
-                        foreach ($lvl['approvers'] as $uid) {
-                            ApprovalRuleUser::create([
-                                'approval_rule_level_id' => $level->id,
-                                'user_id' => $uid,
-                                'role' => 'approver',
-                            ]);
-                        }
-                    }
+                    }     
                 }
             }
 
@@ -125,31 +129,35 @@ class ApprovalRulesController extends Controller
                     $amountLimit = $lvl['amount_limit'] ?? null;
 
                     $level = ApprovalRuleLevel::create([
-                        'approval_rule_id' => $rule->id,
+                        'approval_rules_id' => $rule->id,
                         'level' => $levelNumber,
                         'amount_limit' => $amountLimit,
                         'is_active' => 1,
                     ]);
 
-                    if (!empty($lvl['requesters'])) {
-                        foreach ($lvl['requesters'] as $uid) {
-                            ApprovalRuleUser::create([
-                                'approval_rule_level_id' => $level->id,
-                                'user_id' => $uid,
-                                'role' => 'requester',
-                            ]);
+                    if (!empty($lvl['pairs']) && is_array($lvl['pairs'])) {
+                        foreach ($lvl['pairs'] as $pair) {
+                            if (!empty($pair['requester'])) {
+                                foreach ($pair['requester'] as $uid) {
+                                    ApprovalRuleUser::create([
+                                        'approval_rule_levels_id' => $level->id,
+                                        'user_id' => $uid,
+                                        'role' => 'requester',
+                                    ]);
+                                }
+                            }
+                    
+                            if (!empty($pair['approver'])) {
+                                foreach ($pair['approver'] as $uid) {
+                                    ApprovalRuleUser::create([
+                                        'approval_rule_levels_id' => $level->id,
+                                        'user_id' => $uid,
+                                        'role' => 'approver',
+                                    ]);
+                                }
+                            }
                         }
-                    }
-
-                    if (!empty($lvl['approvers'])) {
-                        foreach ($lvl['approvers'] as $uid) {
-                            ApprovalRuleUser::create([
-                                'approval_rule_level_id' => $level->id,
-                                'user_id' => $uid,
-                                'role' => 'approver',
-                            ]);
-                        }
-                    }
+                    }     
                 }
             }
 
@@ -165,6 +173,9 @@ class ApprovalRulesController extends Controller
     {
         $rule = ApprovalRule::findOrFail($id);
         $rule->delete();
-        return response()->json(['success' => true]);
+
+        session()->flash('warning', 'Approval Rule Deleted!');
+        return redirect()->route('approval_rules.index');
     }
+
 }

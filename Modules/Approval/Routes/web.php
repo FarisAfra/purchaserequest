@@ -14,4 +14,5 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('approval_requests', [ApprovalRequestController::class,'store'])->name('approval_requests.store');
     Route::post('approval_requests/{id}/approve', [ApprovalRequestController::class,'approve'])->name('approval_requests.approve');
     Route::post('approval_requests/{id}/reject', [ApprovalRequestController::class,'reject'])->name('approval_requests.reject');
+    Route::get('{id}/edit', [ApprovalTypesController::class, 'edit'])->name('approval_types.edit');
 });

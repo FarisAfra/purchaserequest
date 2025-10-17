@@ -32,6 +32,6 @@ class ApprovalRule extends Model
      */
 
     public function levels() {
-        return $this->hasMany(ApprovalRuleLevel::class,'approval_rule_id')->orderBy('level');
+        return $this->hasMany(ApprovalRuleLevel::class,'approval_rules_id')->orderBy('level');
     }
 }

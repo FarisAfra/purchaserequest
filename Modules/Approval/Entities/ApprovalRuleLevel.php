@@ -21,7 +21,7 @@ class ApprovalRuleLevel extends Model
 
     public function users()
     {
-        return $this->hasMany(ApprovalRuleUser::class, 'approval_rule_level_id');
+        return $this->hasMany(ApprovalRuleUser::class, 'approval_rule_levels_id');
     }
     
     public function approvers() {

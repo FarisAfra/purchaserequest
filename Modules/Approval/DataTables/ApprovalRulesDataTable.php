@@ -10,7 +10,7 @@ class ApprovalRulesDataTable extends DataTable
 {
     public function dataTable($query){
         return datatables()->query($query)
-            ->addColumn('action', fn($row) => view('approval::approval_rules.partials.actions', ['row'=>$row]));
+        ->addColumn('action', fn($data) => view('approval::approval_rules.partials.actions', compact('data')));
     }
 
     public function query(){
