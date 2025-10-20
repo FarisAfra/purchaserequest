@@ -10,7 +10,19 @@ class ApprovalRulesDataTable extends DataTable
 {
     public function dataTable($query){
         return datatables()->query($query)
-        ->addColumn('action', fn($data) => view('approval::approval_rules.partials.actions', compact('data')));
+        ->editColumn('is_active', function($data) {
+            if ($data->is_active) {
+                return '<span class="badge badge-success">Aktif</span>';
+            }
+            return '<span class="badge badge-danger">Nonaktif</span>';
+        })
+
+        ->filterColumn('type_name', function($query, $keyword) {
+            $query->where('approval_types.approval_name', 'like', "%{$keyword}%");
+       })
+        
+        ->addColumn('action', fn($data) => view('approval::approval_rules.partials.actions', compact('data')))
+        ->rawColumns(['action', 'is_active']);
     }
 
     public function query(){
@@ -37,7 +49,9 @@ class ApprovalRulesDataTable extends DataTable
     protected function getColumns(){
         return [
             Column::make('id')->title('#'),
-            Column::make('type_name')->title('Type'),
+            Column::make('type_name')
+                  ->title('Type')
+                  ->searchable(false), // <-- TAMBAHKAN INI
             Column::make('rule_name')->title('Rule'),
             Column::make('is_active')->title('Active'),
             Column::computed('action')->exportable(false)->printable(false)->addClass('text-center')

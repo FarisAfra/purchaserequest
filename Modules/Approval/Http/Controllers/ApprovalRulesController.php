@@ -42,7 +42,7 @@ class ApprovalRulesController extends Controller
             $rule = ApprovalRule::create([
                 'approval_types_id' => $request->approval_types_id,
                 'rule_name' => $request->rule_name,
-                'is_active' => $request->has('is_active') ? 1 : 0,
+                'is_active' => $request->is_active,
             ]);
 
             if ($request->has('levels') && is_array($request->levels)) {
@@ -58,13 +58,15 @@ class ApprovalRulesController extends Controller
                     ]);
 
                     if (!empty($lvl['pairs']) && is_array($lvl['pairs'])) {
-                        foreach ($lvl['pairs'] as $pair) {
+                        foreach ($lvl['pairs'] as $pairIdx => $pair) { // <-- Gunakan $pairIdx
+                            
                             if (!empty($pair['requester'])) {
                                 foreach ($pair['requester'] as $uid) {
                                     ApprovalRuleUser::create([
                                         'approval_rule_levels_id' => $level->id,
                                         'user_id' => $uid,
                                         'role' => 'requester',
+                                        'sequence' => $pairIdx, // <-- Simpan urutannya
                                     ]);
                                 }
                             }
@@ -75,15 +77,17 @@ class ApprovalRulesController extends Controller
                                         'approval_rule_levels_id' => $level->id,
                                         'user_id' => $uid,
                                         'role' => 'approver',
+                                        'sequence' => $pairIdx, // <-- Simpan urutannya
                                     ]);
                                 }
                             }
                         }
-                    }     
+                    }
                 }
             }
 
             DB::commit();
+            toast('Approval Rule Created!', 'success');
             return redirect()->route('approval_rules.index')->with('success', 'Rule saved.');
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -114,7 +118,7 @@ class ApprovalRulesController extends Controller
             $rule->update([
                 'approval_types_id' => $request->approval_types_id,
                 'rule_name' => $request->rule_name,
-                'is_active' => $request->has('is_active') ? 1 : 0,
+                'is_active' => $request->is_active,
             ]);
 
             // Delete old levels and users, then re-create
@@ -136,13 +140,15 @@ class ApprovalRulesController extends Controller
                     ]);
 
                     if (!empty($lvl['pairs']) && is_array($lvl['pairs'])) {
-                        foreach ($lvl['pairs'] as $pair) {
+                        foreach ($lvl['pairs'] as $pairIdx => $pair) { // <-- Gunakan $pairIdx
+                            
                             if (!empty($pair['requester'])) {
                                 foreach ($pair['requester'] as $uid) {
                                     ApprovalRuleUser::create([
                                         'approval_rule_levels_id' => $level->id,
                                         'user_id' => $uid,
                                         'role' => 'requester',
+                                        'sequence' => $pairIdx, // <-- Simpan urutannya
                                     ]);
                                 }
                             }
@@ -153,15 +159,17 @@ class ApprovalRulesController extends Controller
                                         'approval_rule_levels_id' => $level->id,
                                         'user_id' => $uid,
                                         'role' => 'approver',
+                                        'sequence' => $pairIdx, // <-- Simpan urutannya
                                     ]);
                                 }
                             }
                         }
-                    }     
+                    } 
                 }
             }
 
             DB::commit();
+            toast('Approval Rule Updated!', 'info');
             return redirect()->route('approval_rules.index')->with('success', 'Rule updated.');
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -174,7 +182,7 @@ class ApprovalRulesController extends Controller
         $rule = ApprovalRule::findOrFail($id);
         $rule->delete();
 
-        session()->flash('warning', 'Approval Rule Deleted!');
+        toast('Approval Rule Deleted!', 'warning');
         return redirect()->route('approval_rules.index');
     }
 

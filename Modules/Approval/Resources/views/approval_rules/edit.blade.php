@@ -161,76 +161,86 @@ $(function () {
 
     // Tampilkan data level & user yang sudah ada
     ruleData.levels.forEach((lvl, i) => {
-        const pairs = [];
-        
-        // --- PERBAIKAN DI SINI ---
-        // Hapus .pivot. Akses properti langsung dari 'u'
-        const reqs = lvl.users.filter(u => u.role === 'requester').map(u => u.user_id);
-        const apps = lvl.users.filter(u => u.role === 'approver').map(u => u.user_id);
-        // --- BATAS PERBAIKAN ---
 
-        pairs.push({ requesters: reqs, approvers: apps });
+        // --- PERBAIKAN LOGIKA DIMULAI DI SINI ---
 
-        container.append(levelHtml(i, lvl.level, lvl.amount_limit, pairs, lvl.id)); 
+        // 1. Kelompokkan semua user di level ini berdasarkan nomor sequence-nya
+        const groupedBySequence = lvl.users.reduce((acc, user) => {
+            const seq = user.sequence; // Ambil nomor sequence
+            if (!acc[seq]) {
+                acc[seq] = []; // Jika sequence ini baru, buat array kosong
+            }
+            acc[seq].push(user); // Masukkan user ke grup sequence-nya
+            return acc;
+        }, {});
 
+        // 2. Ubah objek yang sudah dikelompokkan menjadi format 'pairs' yang kita butuhkan
+        const pairs = Object.values(groupedBySequence).map(usersInSequence => {
+            const requesters = usersInSequence
+                .filter(u => u.role === 'requester')
+                .map(u => u.user_id);
+            const approvers = usersInSequence
+                .filter(u => u.role === 'approver')
+                .map(u => u.user_id);
+
+            return { requesters: requesters, approvers: approvers };
+        });
+
+        // --- PERBAIKAN LOGIKA SELESAI ---
+
+        // 3. Render HTML dengan data 'pairs' yang sudah terstruktur dengan benar
+        container.append(levelHtml(i, lvl.level, lvl.amount_limit, pairs, lvl.id));
     });
 
     initSelect2(container);
 
     // Set selected values
     ruleData.levels.forEach((lvl, i) => {
-        
-        // --- PERBAIKAN DI SINI JUGA ---
-        // Hapus .pivot. Akses properti langsung dari 'u'
-        const reqs = lvl.users.filter(u => u.role === 'requester').map(u => u.user_id);
-        const apps = lvl.users.filter(u => u.role === 'approver').map(u => u.user_id);
-        // --- BATAS PERBAIKAN ---
+        // Lakukan pengelompokan yang sama lagi untuk mencocokkan data
+        const groupedBySequence = lvl.users.reduce((acc, user) => {
+            const seq = user.sequence;
+            if (!acc[seq]) { acc[seq] = []; }
+            acc[seq].push(user);
+            return acc;
+        }, {});
 
-        const pairContainer = $(`#pair-container-${i}`);
+        // Loop melalui setiap grup sequence
+        Object.values(groupedBySequence).forEach((usersInSequence, pairIndex) => {
+            // Dapatkan requester & approver untuk sequence spesifik ini
+            const reqs = usersInSequence.filter(u => u.role === 'requester').map(u => u.user_id);
+            const apps = usersInSequence.filter(u => u.role === 'approver').map(u => u.user_id);
+            
+            // Temukan elemen HTML '.user-pair' yang sesuai dengan index-nya
+            const pairContainer = $(`#pair-container-${i} .user-pair[data-pair="${pairIndex}"]`);
 
-        pairContainer.find('.user-pair').each(function () {
-            setPreselectedUsers($(this), '.requester', reqs);
-            setPreselectedUsers($(this), '.approver', apps);
+            // Set nilai yang sudah dipilih untuk pair spesifik ini
+            setPreselectedUsers(pairContainer, '.requester', reqs);
+            setPreselectedUsers(pairContainer, '.approver', apps);
         });
     });
 
-    // Tambah level
+    // Tambah level (logika ini sudah benar)
     $('#add-level').click(function() {
-    // 1. Hitung index baru berdasarkan jumlah elemen yang ada SAAT INI.
-    const newIndex = $('#levels-container .level-card').length;
-
-    // 2. Gunakan index baru tersebut untuk membuat HTML.
-    container.append(levelHtml(newIndex));
-    initSelect2(container);
-});
-
-    // Hapus level
-    $(document).on('click', '.remove-level', function() {
-    $(this).closest('.level-card').remove();
-    
-    // Setelah menghapus, kita perlu mengindeks ulang semua level yang tersisa
-    $('#levels-container .level-card').each(function(i, el) {
-        // 'i' adalah index baru yang benar (0, 1, 2, ...)
-        
-        // Update data-idx atribut
-        $(el).attr('data-idx', i);
-
-        // Update semua atribut 'name' di dalamnya agar berurutan
-        $(el).find('[name]').each(function() {
-            let name = $(this).attr('name');
-            // Ganti 'levels[angka_lama]' menjadi 'levels[i_baru]'
-            name = name.replace(/levels\[\d+\]/, `levels[${i}]`);
-            $(this).attr('name', name);
-        });
-
-        // Update nilai visual di input 'Level'
-        $(el).find('input[name*="[level]"]').val(i + 1);
+        const newIndex = $('#levels-container .level-card').length;
+        container.append(levelHtml(newIndex));
+        initSelect2(container);
     });
-    
-    // Tidak perlu lagi mengelola levelIndex secara manual!
-});
 
-    // Tambah pair
+    // Hapus level (logika ini sudah benar)
+    $(document).on('click', '.remove-level', function() {
+        $(this).closest('.level-card').remove();
+        $('#levels-container .level-card').each(function(i, el) {
+            $(el).attr('data-idx', i);
+            $(el).find('[name]').each(function() {
+                let name = $(this).attr('name');
+                name = name.replace(/levels\[\d+\]/, `levels[${i}]`);
+                $(this).attr('name', name);
+            });
+            $(el).find('input[name*="[level]"]').val(i + 1);
+        });
+    });
+
+    // Tambah pair (logika ini sudah benar)
     $(document).on('click', '.add-pair', function () {
         const levelIdx = $(this).data('level');
         const pairContainer = $(`#pair-container-${levelIdx}`);
@@ -239,7 +249,7 @@ $(function () {
         initSelect2(pairContainer);
     });
 
-    // Hapus pair
+    // Hapus pair (logika ini sudah benar)
     $(document).on('click', '.remove-pair', function () {
         $(this).closest('.user-pair').remove();
     });

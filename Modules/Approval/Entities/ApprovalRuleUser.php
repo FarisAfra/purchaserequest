@@ -11,6 +11,7 @@ class ApprovalRuleUser extends Model
         'approval_rule_levels_id',
         'user_id',
         'role',
+        'sequence',
     ];
 
     public function level()
